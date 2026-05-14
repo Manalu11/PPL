@@ -44,4 +44,8 @@ class OrderController extends Controller
         return redirect()->route('orders.index')
             ->with('success', 'Data berhasil dihapus');
     }
+    public function show(Order $order)
+    {
+        return view('admin.orders.show', compact('order'));
+    }
 }

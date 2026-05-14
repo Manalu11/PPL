@@ -74,36 +74,64 @@
                     <span class="mt-3 text-gray-700 text-sm">New Arrivals</span>
                 </a>
 
-                {{-- BEST SELLER --}}
+                {{-- BEST SELLER (ACTIVE) --}}
                 <a href="{{ route('best.seller') }}" class="flex flex-col items-center group cursor-pointer">
-                    <div class="w-16 h-16 bg-pink-200 rounded-full flex items-center justify-center text-2xl
-                        group-hover:bg-pink-400 group-hover:text-white transition">
+                    <div
+                        class="w-16 h-16 bg-pink-400 rounded-full flex items-center justify-center text-2xl text-white shadow-md">
                         🏆
                     </div>
-                    <span class="mt-3 text-gray-700 text-sm">Best Seller</span>
+                    <span class="mt-3 text-pink-500 text-sm font-semibold">Best Seller</span>
                 </a>
 
             </div>
 
             <!-- SECTION TITLE -->
             <div class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl font-bold text-gray-800">New Arrivals</h2>
-                <a href="{{ route('new.arrivals') }}" class="text-pink-500 text-sm hover:underline">Lihat Semua</a>
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">🏆 Best Seller</h2>
+                    <p class="text-sm text-gray-400 mt-1">Produk yang paling banyak dibeli pelanggan</p>
+                </div>
+                <a href="{{ route('dashboard') }}" class="text-pink-500 text-sm hover:underline">
+                    ← Kembali ke Beranda
+                </a>
             </div>
 
-            <!-- PRODUCT SCROLL WRAPPER -->
+            <!-- PRODUCT GRID -->
+            @if($products->isEmpty())
+            <div class="flex flex-col items-center justify-center py-24 text-gray-400">
+                <span class="text-6xl mb-4">🏆</span>
+                <p class="text-lg font-medium">Belum ada data penjualan.</p>
+                <p class="text-sm mt-1">Produk terlaris akan muncul di sini.</p>
+                <a href="{{ route('dashboard') }}"
+                    class="mt-6 bg-pink-400 hover:bg-pink-500 text-white text-sm px-6 py-2 rounded-full transition">
+                    Lihat Semua Produk
+                </a>
+            </div>
+            @else
             <div class="overflow-x-auto pb-4">
                 <div class="grid gap-6" style="grid-template-columns: repeat(6, minmax(260px, 260px));">
 
-                    @forelse($products as $product)
+                    @foreach($products as $index => $product)
                     <a href="{{ route('product.show', $product->id) }}" class="block">
                         <div
-                            class="bg-white rounded-xl shadow hover:shadow-lg transition p-4 relative cursor-pointer flex flex-col h-full">
+                            class="bg-white rounded-xl shadow hover:shadow-lg transition p-4 relative cursor-pointer h-full flex flex-col">
 
-                            {{-- Badge NEW --}}
-                            @if($product->is_new)
-                            <span class="absolute top-3 left-3 bg-black text-white text-xs px-3 py-1">
-                                NEW
+                            {{-- Badge Ranking --}}
+                            @if($index === 0)
+                            <span class="absolute top-3 left-3 bg-yellow-400 text-white text-xs px-3 py-1 font-bold">
+                                🥇 #1
+                            </span>
+                            @elseif($index === 1)
+                            <span class="absolute top-3 left-3 bg-gray-400 text-white text-xs px-3 py-1 font-bold">
+                                🥈 #2
+                            </span>
+                            @elseif($index === 2)
+                            <span class="absolute top-3 left-3 bg-amber-600 text-white text-xs px-3 py-1 font-bold">
+                                🥉 #3
+                            </span>
+                            @else
+                            <span class="absolute top-3 left-3 bg-pink-300 text-white text-xs px-3 py-1">
+                                #{{ $index + 1 }}
                             </span>
                             @endif
 
@@ -116,7 +144,7 @@
 
                             {{-- IMAGE --}}
                             <div class="bg-gray-50 rounded-lg p-4 mb-3 flex items-center justify-center">
-                                <img src="{{ asset('storage/'.$product->image) }}" alt="{{ $product->name }}"
+                                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}"
                                     class="h-24 object-contain">
                             </div>
 
@@ -132,6 +160,11 @@
                             <p class="text-gray-500 text-xs mt-1 text-center flex-1">
                                 {{ $product->name }}
                             </p>
+
+                            {{-- Total Terjual --}}
+                            <div class="text-pink-400 text-xs mt-1 text-center font-medium">
+                                🛍️ {{ $product->order_items_sum_quantity ?? 0 }} terjual
+                            </div>
 
                             {{-- Price --}}
                             <div class="mt-2">
@@ -166,15 +199,16 @@
 
                         </div>
                     </a>
-
-                    @empty
-                    <div class="col-span-6 text-center text-gray-500 py-12">
-                        Belum ada produk tersedia.
-                    </div>
-                    @endforelse
+                    @endforeach
 
                 </div>
             </div>
+
+            <div class="mt-8 text-center text-gray-400 text-sm">
+                Menampilkan {{ $products->count() }} produk terlaris
+            </div>
+
+            @endif
 
         </div>
 

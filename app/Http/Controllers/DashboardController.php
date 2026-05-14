@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Banner;
 
 class DashboardController extends Controller
 {
@@ -12,24 +13,40 @@ class DashboardController extends Controller
     {
         $query = Product::with('category')->latest();
 
+        // 🔍 SEARCH
         if ($request->filled('search')) {
             $search = $request->search;
-
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%")
-                    ->orWhere('skin_type', 'like', "%{$search}%")
-                    ->orWhere('brand', 'like', "%{$search}%")
-                    ->orWhereHas('category', function ($cat) use ($search) {
-                        $cat->where('name', 'like', "%{$search}%")
-                            ->orWhere('slug', 'like', "%{$search}%");
-                    });
+                    ->orWhere('brand', 'like', "%{$search}%");
             });
         }
 
         $products = $query->get();
 
-        return view('dashboard', compact('products'));
+        // 🔥 NEW ARRIVALS (ambil 10 terbaru)
+        $newArrivals = Product::latest()->take(10)->get();
+
+        return view('dashboard', compact('products', 'newArrivals'));
+    }
+
+    public function promotion()
+    {
+        $products = Product::with('promotions')
+            ->whereHas('promotions', function ($q) {
+                $q->where('start_date', '<=', now())
+                    ->where('end_date', '>=', now());
+            })
+            ->get();
+
+        $banners = Banner::where('is_active', true)->orderBy('order')->get(); // ← ganti ini
+
+        return view('promotion', compact('products', 'banners')); // ← ganti 'banner' jadi 'banners'
+    }
+    public function show($id)
+    {
+        $product = Product::findOrFail($id);
+        return view('product.show', compact('product'));
     }
 
     public function addToCart($id)
@@ -67,10 +84,20 @@ class DashboardController extends Controller
 
         return view('dashboard', compact('products'));
     }
-
-    public function show($id)
+    public function newArrivals()
     {
-        $product = Product::findOrFail($id);
-        return view('product.show', compact('product'));
+        $products = Product::where('created_at', '>=', now()->subDays(7))
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('new-arrivals', compact('products'));
+    }
+    public function bestSeller()
+    {
+        $products = Product::withSum('orderItems', 'quantity')
+            ->orderByDesc('order_items_sum_quantity')
+            ->get();
+
+        return view('best-seller', compact('products'));
     }
 }
